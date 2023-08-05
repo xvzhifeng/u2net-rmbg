@@ -39,6 +39,7 @@ def save_output(image_name,pred,d_dir,sigma=2,alpha=0.5):
     predict = predict.squeeze()
     predict_np = predict.cpu().data.numpy()
 
+    print(predict_np.shape)
     image = io.imread(image_name)
     pd = transform.resize(predict_np,image.shape[0:2],order=2)
     pd = pd/(np.amax(pd)+1e-8)*255
@@ -57,6 +58,7 @@ def save_output(image_name,pred,d_dir,sigma=2,alpha=0.5):
     im_comp = image*alpha+pd*(1-alpha)
 
     print(im_comp.shape)
+    # print(im_comp)
 
 
     img_name = image_name.split(os.sep)[-1]
@@ -65,7 +67,8 @@ def save_output(image_name,pred,d_dir,sigma=2,alpha=0.5):
     imidx = bbb[0]
     for i in range(1,len(bbb)):
         imidx = imidx + "." + bbb[i]
-    io.imsave(d_dir+'/'+imidx+'_sigma_' + str(sigma) + '_alpha_' + str(alpha) + '_composite.png',im_comp)
+    io.imsave(d_dir+'/'+imidx+'_sigma_' + str(sigma) + '_alpha_' + str(alpha) + '_composite.png',np.uint8(im_comp))
+    # io.imsave(d_dir+"/"+imidx+'_T.png', predict_np)
 
 def main():
 
@@ -88,6 +91,7 @@ def main():
 
     model_dir = './saved_models/u2net_portrait/u2net_portrait.pth'
 
+    # get under folder all file
     img_name_list = glob.glob(image_dir+'/*')
     print("Number of images: ", len(img_name_list))
 
@@ -108,7 +112,7 @@ def main():
     print("...load U2NET---173.6 MB")
     net = U2NET(3,1)
 
-    net.load_state_dict(torch.load(model_dir))
+    net.load_state_dict(torch.load(model_dir, map_location=torch.device('cpu')))
     if torch.cuda.is_available():
         net.cuda()
     net.eval()
